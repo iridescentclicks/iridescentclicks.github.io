@@ -119,18 +119,6 @@ const IMAGE_SLOTS=[
   {key:'elsewhere',title:'Elsewhere',path:'elsewhere',description:'Nature Series'}
 ];
 
-const FALLBACKS={
-  hero:"https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=80",
-  "01":"https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80",
-  "02":"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80",
-  "03":"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
-  "04":"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80",
-  "05":"https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=800&q=80",
-  "06":"https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=800&q=80",
-  terrain:"https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=800&q=80",
-  human:"https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80",
-  elsewhere:"https://images.unsplash.com/photo-1428908728789-d2de25dbd4e2?auto=format&fit=crop&w=800&q=80"
-};
 
 function setMessage(text,error=false){
   loginMessage.textContent=text;
@@ -229,12 +217,16 @@ async function signedUrl(found){
 
 async function renderSlots(){
   if(!supabaseClient) return;
-  photoGrid.innerHTML='';
+  // Always clear the grid before rendering and render each slot exactly once.
+  photoGrid.replaceChildren();
+  const renderedKeys=new Set();
   try{
     const [rootFiles,galleryFiles]=await Promise.all([listFiles(),listGalleryFiles()]);
     for(const slot of IMAGE_SLOTS){
+      if(renderedKeys.has(slot.key)) continue;
+      renderedKeys.add(slot.key);
       const found=await findFile(slot,rootFiles,galleryFiles);
-      const url=found?await signedUrl(found):FALLBACKS[slot.key];
+      const url=found?await signedUrl(found):null;
       const card=document.createElement('article');
       card.className='card';
       card.innerHTML=`
@@ -242,7 +234,7 @@ async function renderSlots(){
         <div class="card-body">
           <div class="mono">${slot.description}</div>
           <div class="card-title">${slot.title}</div>
-          <div class="card-name">${found?found.file.name:'Using fallback image'}</div>
+          <div class="card-name">${found?found.file.name:'No image uploaded'}</div>
           <div class="actions">
             <label class="primary" style="padding:12px 16px;cursor:pointer">
               Replace
@@ -315,3 +307,4 @@ if(supabaseClient){
 </script>
 </body>
 </html>
+
