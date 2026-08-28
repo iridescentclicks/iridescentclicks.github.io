@@ -34,7 +34,7 @@ button:hover{background:#f2f0eb;color:#090909}
 .message{margin-top:16px;color:var(--muted);font-size:13px}
 .error{color:#efaaaa}
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid var(--line);padding-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:24px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:24px}
 .card{background:var(--surface);border:1px solid var(--line);overflow:hidden}
 .preview{aspect-ratio:4/3;background:#151515;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .preview img{width:100%;height:100%;object-fit:cover}
@@ -47,7 +47,7 @@ input[type=file]{display:none}
 .status{margin-top:20px;color:var(--muted);min-height:20px}
 .note{margin-top:20px;padding:16px;border:1px solid var(--line);color:var(--muted);font-size:12px}
 @media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.container{width:min(calc(100% - 28px),1200px)}}
-@media(max-width:560px){.grid{grid-template-columns:1fr}.toolbar{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){.grid{grid-template-columns:1fr.toolbar{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -89,7 +89,7 @@ input[type=file]{display:none}
       </div>
       <button id="logoutBtn">Sign out</button>
     </div>
-    <p class="lead">Replace any of the six public gallery photographs. Your Supabase policies restrict these actions to your admin account.</p>
+    <p class="lead">Manage every photograph used by the public Iridescent site. Your Supabase policies restrict these actions to your admin account.</p>
     <div id="photoGrid" class="grid"></div>
     <p id="adminStatus" class="status" aria-live="polite"></p>
   </section>
@@ -106,14 +106,31 @@ const loginMessage=document.getElementById('loginMessage');
 const adminStatus=document.getElementById('adminStatus');
 const photoGrid=document.getElementById('photoGrid');
 
-const FALLBACKS=[
-  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=800&q=80"
+const IMAGE_SLOTS=[
+  {key:'hero',title:'Hero image',path:'hero',description:'Full-screen opening photograph'},
+  {key:'01',title:'Horizon',path:'01',description:'Selected work'},
+  {key:'02',title:'Solitude',path:'02',description:'Selected work'},
+  {key:'03',title:'Alpine',path:'03',description:'Selected work'},
+  {key:'04',title:'Open Road',path:'04',description:'Selected work'},
+  {key:'05',title:'Afterglow',path:'05',description:'Selected work'},
+  {key:'06',title:'Stillness',path:'06',description:'Selected work'},
+  {key:'terrain',title:'Terrain',path:'terrain',description:'Nature Series'},
+  {key:'human',title:'Human',path:'human',description:'Nature Series'},
+  {key:'elsewhere',title:'Elsewhere',path:'elsewhere',description:'Nature Series'}
 ];
+
+const FALLBACKS={
+  hero:"https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=80",
+  "01":"https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80",
+  "02":"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80",
+  "03":"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
+  "04":"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80",
+  "05":"https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=800&q=80",
+  "06":"https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=800&q=80",
+  terrain:"https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=800&q=80",
+  human:"https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80",
+  elsewhere:"https://images.unsplash.com/photo-1428908728789-d2de25dbd4e2?auto=format&fit=crop&w=800&q=80"
+};
 
 function setMessage(text,error=false){
   loginMessage.textContent=text;
@@ -123,7 +140,6 @@ function setStatus(text,error=false){
   adminStatus.textContent=text;
   adminStatus.className='status'+(error?' error':'');
 }
-
 function requireConfig(){
   if(!supabaseClient){
     setMessage('Add your Supabase project URL and anon/publishable key to supabase-config.js first.',true);
@@ -131,13 +147,11 @@ function requireConfig(){
   }
   return true;
 }
-
 async function currentAdmin(){
   if(!supabaseClient) return false;
   const {data:{user}}=await supabaseClient.auth.getUser();
   return !!user && user.id===IRIDESCENT_ADMIN_UID;
 }
-
 async function showAdminIfAuthorized(){
   if(!supabaseClient) return;
   const {data:{session}}=await supabaseClient.auth.getSession();
@@ -180,23 +194,35 @@ document.getElementById('logoutBtn').addEventListener('click',async()=>{
   loginView.classList.remove('hidden');
 });
 
-async function listGalleryFiles(){
-  const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).list('gallery',{
-    limit:100,
-    sortBy:{column:'name',order:'asc'}
+async function listFiles(){
+  const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).list('',{
+    limit:100,sortBy:{column:'name',order:'asc'}
   });
   if(error) throw error;
   return (data||[]).filter(f=>/\.(jpe?g|png|webp|gif|avif)$/i.test(f.name));
 }
 
-async function findSlotFile(slot,files){
-  const prefix=String(slot).padStart(2,'0')+'.';
-  return files.find(f=>f.name.startsWith(prefix)) || null;
+async function listGalleryFiles(){
+  const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).list('gallery',{
+    limit:100,sortBy:{column:'name',order:'asc'}
+  });
+  if(error) throw error;
+  return (data||[]).filter(f=>/\.(jpe?g|png|webp|gif|avif)$/i.test(f.name));
 }
 
-async function signedUrl(name){
-  if(!name) return null;
-  const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).createSignedUrl(`gallery/${name}`,3600);
+async function findFile(slot,rootFiles,galleryFiles){
+  const base=slot.path;
+  const root=rootFiles.find(f=>new RegExp('^'+base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\.(jpe?g|png|webp|gif|avif)$','i').test(f.name));
+  if(root) return {file:root,folder:''};
+  const gallery=galleryFiles.find(f=>f.name.startsWith(base+'.'));
+  if(gallery) return {file:gallery,folder:'gallery'};
+  return null;
+}
+
+async function signedUrl(found){
+  if(!found) return null;
+  const path=found.folder ? `${found.folder}/${found.file.name}` : found.file.name;
+  const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).createSignedUrl(path,3600);
   if(error) return null;
   return data.signedUrl;
 }
@@ -205,78 +231,79 @@ async function renderSlots(){
   if(!supabaseClient) return;
   photoGrid.innerHTML='';
   try{
-    const files=await listGalleryFiles();
-    for(let slot=1;slot<=6;slot++){
-      const file=await findSlotFile(slot,files);
-      const url=file?await signedUrl(file.name):FALLBACKS[slot-1];
+    const [rootFiles,galleryFiles]=await Promise.all([listFiles(),listGalleryFiles()]);
+    for(const slot of IMAGE_SLOTS){
+      const found=await findFile(slot,rootFiles,galleryFiles);
+      const url=found?await signedUrl(found):FALLBACKS[slot.key];
       const card=document.createElement('article');
       card.className='card';
       card.innerHTML=`
-        <div class="preview">${url?`<img src="${url}" alt="Gallery slot ${slot}">`:'<span class="empty">Empty</span>'}</div>
+        <div class="preview">${url?`<img src="${url}" alt="${slot.title}">`:'<span class="empty">No image</span>'}</div>
         <div class="card-body">
-          <div class="mono">Slot ${String(slot).padStart(2,'0')}</div>
-          <div class="card-title">${file?'Current photo':'No uploaded photo'}</div>
-          <div class="card-name">${file?file.name:'Public site will use its fallback image'}</div>
+          <div class="mono">${slot.description}</div>
+          <div class="card-title">${slot.title}</div>
+          <div class="card-name">${found?found.file.name:'Using fallback image'}</div>
           <div class="actions">
             <label class="primary" style="padding:12px 16px;cursor:pointer">
               Replace
-              <input type="file" accept="image/*" data-slot="${slot}">
+              <input type="file" accept="image/*" data-slot="${slot.key}">
             </label>
-            ${file?`<button class="danger" data-delete="${slot}">Delete</button>`:''}
+            ${found?`<button class="danger" data-delete="${slot.key}">Delete</button>`:''}
           </div>
         </div>`;
       photoGrid.appendChild(card);
     }
     photoGrid.querySelectorAll('input[type=file]').forEach(input=>{
-      input.addEventListener('change',()=>replaceSlot(Number(input.dataset.slot),input.files[0]));
+      input.addEventListener('change',()=>replaceSlot(input.dataset.slot,input.files[0]));
     });
     photoGrid.querySelectorAll('[data-delete]').forEach(btn=>{
-      btn.addEventListener('click',()=>deleteSlot(Number(btn.dataset.delete)));
+      btn.addEventListener('click',()=>deleteSlot(btn.dataset.delete));
     });
-  }catch(err){
-    setStatus(err.message,true);
-  }
+  }catch(err){setStatus(err.message,true);}
 }
 
-async function replaceSlot(slot,file){
+async function getFound(slot){
+  const [rootFiles,galleryFiles]=await Promise.all([listFiles(),listGalleryFiles()]);
+  return await findFile(IMAGE_SLOTS.find(s=>s.key===slot),rootFiles,galleryFiles);
+}
+
+async function replaceSlot(key,file){
   if(!file) return;
   if(!file.type.startsWith('image/')){setStatus('Please choose an image file.',true);return;}
   if(file.size>10*1024*1024){setStatus('That image is larger than the 10 MB bucket limit.',true);return;}
-  setStatus(`Replacing slot ${String(slot).padStart(2,'0')}…`);
+  const slot=IMAGE_SLOTS.find(s=>s.key===key);
+  setStatus(`Replacing ${slot.title}…`);
   try{
-    const files=await listGalleryFiles();
-    const old=await findSlotFile(slot,files);
+    const old=await getFound(key);
     if(old){
-      const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).remove([`gallery/${old.name}`]);
+      const oldPath=old.folder?`${old.folder}/${old.file.name}`:old.file.name;
+      const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).remove([oldPath]);
       if(error) throw error;
     }
     const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-    const path=`gallery/${String(slot).padStart(2,'0')}.${ext}`;
+    const path=`${slot.path}.${ext}`;
     const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).upload(path,file,{
       cacheControl:'3600',upsert:false,contentType:file.type
     });
     if(error) throw error;
-    setStatus(`Slot ${String(slot).padStart(2,'0')} replaced successfully.`);
+    setStatus(`${slot.title} replaced successfully.`);
     await renderSlots();
-  }catch(err){
-    setStatus(err.message,true);
-  }
+  }catch(err){setStatus(err.message,true);}
 }
 
-async function deleteSlot(slot){
-  if(!confirm(`Delete the photo in slot ${String(slot).padStart(2,'0')}?`)) return;
-  setStatus(`Deleting slot ${String(slot).padStart(2,'0')}…`);
+async function deleteSlot(key){
+  const slot=IMAGE_SLOTS.find(s=>s.key===key);
+  if(!confirm(`Delete the ${slot.title} image?`)) return;
+  setStatus(`Deleting ${slot.title}…`);
   try{
-    const files=await listGalleryFiles();
-    const old=await findSlotFile(slot,files);
+    const old=await getFound(key);
     if(!old){setStatus('Nothing to delete.');return;}
-    const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).remove([`gallery/${old.name}`]);
+    const oldPath=old.folder?`${old.folder}/${old.file.name}`:old.file.name;
+    const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).remove([oldPath]);
     if(error) throw error;
-    setStatus(`Slot ${String(slot).padStart(2,'0')} deleted.`);
+    setStatus(`${slot.title} deleted.`);
     await renderSlots();
-  }catch(err){
-    setStatus(err.message,true);
-  }
+  }catch(err){setStatus(err.message,true);}
 }
 
 if(supabaseClient){
