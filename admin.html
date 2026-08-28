@@ -1,10 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Iridescent admin — private photo management.">
 <title>Iridescent — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
 :root{--bg:#090909;--surface:#111;--surface2:#171717;--text:#f2f0eb;--muted:#9c9a95;--line:rgba(255,255,255,.12);--danger:#d66}
@@ -47,82 +51,114 @@ input[type=file]{display:none}
 .status{margin-top:20px;color:var(--muted);min-height:20px}
 .note{margin-top:20px;padding:16px;border:1px solid var(--line);color:var(--muted);font-size:12px}
 @media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.container{width:min(calc(100% - 28px),1200px)}}
-@media(max-width:560px){.grid{grid-template-columns:1fr.toolbar{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.toolbar{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
 <header>
-  <div class="container nav">
+  <div class="nav wrap">
     <a class="logo" href="index.html">Iridescent</a>
-    <a class="back" href="index.html">← Public site</a>
+    <div class="nav-right">
+      <a class="back" href="index.html">← Public site</a>
+      <button id="logoutBtn">Sign out</button>
+    </div>
   </div>
 </header>
 
 <main>
-<div class="container">
-  <section id="loginView">
-    <span class="mono">Private area</span>
-    <h1>Admin.</h1>
-    <p class="lead">Sign in to manage the photographs shown on Iridescent.</p>
-    <div class="panel">
-      <form id="loginForm">
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" autocomplete="username" required>
-        </div>
-        <div class="field">
-          <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="current-password" required>
-        </div>
-        <button class="primary" type="submit">Sign in</button>
-        <p id="loginMessage" class="message" aria-live="polite"></p>
-      </form>
-    </div>
-    <div class="note">This page is separate from the public navigation. Security is enforced by Supabase Auth and Storage policies, not by hiding a button in the HTML.</div>
-  </section>
-
-  <section id="adminView" class="hidden">
-    <div class="toolbar">
-      <div>
-        <span class="mono">Iridescent / Control room</span>
-        <h1>Photographs.</h1>
+  <div class="wrap">
+    <section id="loginView">
+      <span class="mono">Private area</span>
+      <div class="panel">
+        <h1>Admin.</h1>
+        <p class="lead">Sign in to manage the photographs shown on Iridescent.</p>
+        <form id="loginForm" style="margin-top:32px">
+          <div class="field">
+            <label class="mono" for="email">Email</label>
+            <input id="email" type="email" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label class="mono" for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="actions">
+            <button class="primary" type="submit">Sign in</button>
+          </div>
+          <p id="loginMessage" class="status" aria-live="polite"></p>
+        </form>
       </div>
-      <button id="logoutBtn">Sign out</button>
-    </div>
-    <p class="lead">Manage every photograph used by the public Iridescent site. Your Supabase policies restrict these actions to your admin account.</p>
-    <div id="photoGrid" class="grid"></div>
-    <p id="adminStatus" class="status" aria-live="polite"></p>
-  </section>
-</div>
+    </section>
+
+    <section id="adminView" class="hidden">
+      <div class="hero-admin">
+        <div>
+          <span class="mono">Iridescent / Control room</span>
+          <h1>Photographs.</h1>
+        </div>
+        <p class="lead">Manage every photograph used by the public Iridescent site. Your Supabase policies restrict these actions to your admin account.</p>
+      </div>
+
+      <div >
+        <div class="toolbar">
+          <div>
+            <span class="mono">Iridescent / Image library</span>
+            <h1>Photographs.</h1>
+          </div>
+          <p class="lead">Manage every photograph shown on the public site.</p>
+        </div>
+
+        <div class="mono" style="margin-top:28px;margin-bottom:10px;display:flex;justify-content:space-between">
+          <span>Hero</span><span>01</span>
+        </div>
+        <div id="heroGrid" class="grid"></div>
+
+        <div class="mono" style="margin-top:28px;margin-bottom:10px;display:flex;justify-content:space-between" style="margin-top:70px">
+          <span>Selected work</span><span>02 — 07</span>
+        </div>
+        <div id="workGrid" class="grid"></div>
+
+        <div class="mono" style="margin-top:28px;margin-bottom:10px;display:flex;justify-content:space-between" style="margin-top:70px">
+          <span>Nature series</span><span>08 — 10</span>
+        </div>
+        <div id="seriesGrid" class="grid"></div>
+
+        <p id="adminStatus" class="status" aria-live="polite"></p>
+
+        <div class="note">
+          <span>NO FALLBACK IMAGES</span>
+          <span>An empty slot remains empty until you upload an image.</span>
+        </div>
+      </div>
+    </section>
+  </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
 <script>
 const loginView=document.getElementById('loginView');
 const adminView=document.getElementById('adminView');
 const loginForm=document.getElementById('loginForm');
 const loginMessage=document.getElementById('loginMessage');
 const adminStatus=document.getElementById('adminStatus');
-const photoGrid=document.getElementById('photoGrid');
+const heroGrid=document.getElementById('heroGrid');
+const workGrid=document.getElementById('workGrid');
+const seriesGrid=document.getElementById('seriesGrid');
 
 const IMAGE_SLOTS=[
-  {key:'hero',title:'Hero image',path:'hero',description:'Full-screen opening photograph'},
-  {key:'01',title:'Horizon',path:'01',description:'Selected work'},
-  {key:'02',title:'Solitude',path:'02',description:'Selected work'},
-  {key:'03',title:'Alpine',path:'03',description:'Selected work'},
-  {key:'04',title:'Open Road',path:'04',description:'Selected work'},
-  {key:'05',title:'Afterglow',path:'05',description:'Selected work'},
-  {key:'06',title:'Stillness',path:'06',description:'Selected work'},
-  {key:'terrain',title:'Terrain',path:'terrain',description:'Nature Series'},
-  {key:'human',title:'Human',path:'human',description:'Nature Series'},
-  {key:'elsewhere',title:'Elsewhere',path:'elsewhere',description:'Nature Series'}
+  {key:'hero',title:'Hero image',path:'hero',description:'Full-screen opening photograph',group:'hero'},
+  {key:'01',title:'Horizon',path:'01',description:'Selected work',group:'work'},
+  {key:'02',title:'Solitude',path:'02',description:'Selected work',group:'work'},
+  {key:'03',title:'Alpine',path:'03',description:'Selected work',group:'work'},
+  {key:'04',title:'Open Road',path:'04',description:'Selected work',group:'work'},
+  {key:'05',title:'Afterglow',path:'05',description:'Selected work',group:'work'},
+  {key:'06',title:'Stillness',path:'06',description:'Selected work',group:'work'},
+  {key:'terrain',title:'Terrain',path:'terrain',description:'Nature series',group:'series'},
+  {key:'human',title:'Human',path:'human',description:'Nature series',group:'series'},
+  {key:'elsewhere',title:'Elsewhere',path:'elsewhere',description:'Nature series',group:'series'}
 ];
-
 
 function setMessage(text,error=false){
   loginMessage.textContent=text;
-  loginMessage.className='message'+(error?' error':'');
+  loginMessage.className='status'+(error?' error':'');
 }
 function setStatus(text,error=false){
   adminStatus.textContent=text;
@@ -144,8 +180,7 @@ async function showAdminIfAuthorized(){
   if(!supabaseClient) return;
   const {data:{session}}=await supabaseClient.auth.getSession();
   if(!session) return;
-  const ok=await currentAdmin();
-  if(ok){
+  if(await currentAdmin()){
     loginView.classList.add('hidden');
     adminView.classList.remove('hidden');
     await renderSlots();
@@ -154,7 +189,6 @@ async function showAdminIfAuthorized(){
     setMessage('This account is not authorized for the Iridescent admin area.',true);
   }
 }
-
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   if(!requireConfig()) return;
@@ -164,8 +198,7 @@ loginForm.addEventListener('submit',async e=>{
     password:document.getElementById('password').value
   });
   if(error){setMessage(error.message,true);return;}
-  const ok=await currentAdmin();
-  if(!ok){
+  if(!await currentAdmin()){
     await supabaseClient.auth.signOut();
     setMessage('Login succeeded, but this account is not the Iridescent admin.',true);
     return;
@@ -175,9 +208,8 @@ loginForm.addEventListener('submit',async e=>{
   setMessage('');
   await renderSlots();
 });
-
 document.getElementById('logoutBtn').addEventListener('click',async()=>{
-  await supabaseClient.auth.signOut();
+  if(supabaseClient) await supabaseClient.auth.signOut();
   adminView.classList.add('hidden');
   loginView.classList.remove('hidden');
 });
@@ -189,7 +221,6 @@ async function listFiles(){
   if(error) throw error;
   return (data||[]).filter(f=>/\.(jpe?g|png|webp|gif|avif)$/i.test(f.name));
 }
-
 async function listGalleryFiles(){
   const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).list('gallery',{
     limit:100,sortBy:{column:'name',order:'asc'}
@@ -197,68 +228,80 @@ async function listGalleryFiles(){
   if(error) throw error;
   return (data||[]).filter(f=>/\.(jpe?g|png|webp|gif|avif)$/i.test(f.name));
 }
-
 async function findFile(slot,rootFiles,galleryFiles){
   const base=slot.path;
-  const root=rootFiles.find(f=>new RegExp('^'+base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\.(jpe?g|png|webp|gif|avif)$','i').test(f.name));
+  const escaped=base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const root=rootFiles.find(f=>new RegExp('^'+escaped+'\\.(jpe?g|png|webp|gif|avif)$','i').test(f.name));
   if(root) return {file:root,folder:''};
-  const gallery=galleryFiles.find(f=>f.name.startsWith(base+'.'));
+  const gallery=galleryFiles.find(f=>new RegExp('^'+escaped+'\\.(jpe?g|png|webp|gif|avif)$','i').test(f.name));
   if(gallery) return {file:gallery,folder:'gallery'};
   return null;
 }
-
 async function signedUrl(found){
   if(!found) return null;
-  const path=found.folder ? `${found.folder}/${found.file.name}` : found.file.name;
+  const path=found.folder?`${found.folder}/${found.file.name}`:found.file.name;
   const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).createSignedUrl(path,3600);
   if(error) return null;
   return data.signedUrl;
 }
-
+function targetGrid(slot){
+  return slot.group==='hero'?heroGrid:slot.group==='work'?workGrid:seriesGrid;
+}
+function makeCard(slot,found,url,index){
+  const card=document.createElement('article');
+  card.className='card '+(slot.group==='hero'?'hero-card':slot.group==='work'?'work-card':'series-card');
+  const number=slot.key==='hero'?'HERO':String(index).padStart(2,'0');
+  card.innerHTML=`
+    <div class="preview">
+      ${url?`<img src="${url}" alt="${slot.title}">`:'<div class="empty">No image uploaded</div>'}
+      <span class="badge mono">${number}</span>
+    </div>
+    <div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="card-title">${slot.title}</div>
+          <div class="card-desc">${slot.description}</div>
+        </div>
+      </div>
+      <div class="filename">${found?found.file.name:'No image uploaded'}</div>
+      <div class="card-actions">
+        <label class="upload primary">Replace<input type="file" accept="image/*" data-slot="${slot.key}"></label>
+        ${found?`<button class="danger" data-delete="${slot.key}">Delete</button>`:''}
+      </div>
+    </div>`;
+  return card;
+}
 async function renderSlots(){
   if(!supabaseClient) return;
-  // Always clear the grid before rendering and render each slot exactly once.
-  photoGrid.replaceChildren();
-  const renderedKeys=new Set();
+  heroGrid.replaceChildren();
+  workGrid.replaceChildren();
+  seriesGrid.replaceChildren();
   try{
     const [rootFiles,galleryFiles]=await Promise.all([listFiles(),listGalleryFiles()]);
+    const rendered=new Set();
+    let workIndex=1;
+    let seriesIndex=7;
     for(const slot of IMAGE_SLOTS){
-      if(renderedKeys.has(slot.key)) continue;
-      renderedKeys.add(slot.key);
+      if(rendered.has(slot.key)) continue;
+      rendered.add(slot.key);
       const found=await findFile(slot,rootFiles,galleryFiles);
       const url=found?await signedUrl(found):null;
-      const card=document.createElement('article');
-      card.className='card';
-      card.innerHTML=`
-        <div class="preview">${url?`<img src="${url}" alt="${slot.title}">`:'<span class="empty">No image</span>'}</div>
-        <div class="card-body">
-          <div class="mono">${slot.description}</div>
-          <div class="card-title">${slot.title}</div>
-          <div class="card-name">${found?found.file.name:'No image uploaded'}</div>
-          <div class="actions">
-            <label class="primary" style="padding:12px 16px;cursor:pointer">
-              Replace
-              <input type="file" accept="image/*" data-slot="${slot.key}">
-            </label>
-            ${found?`<button class="danger" data-delete="${slot.key}">Delete</button>`:''}
-          </div>
-        </div>`;
-      photoGrid.appendChild(card);
+      const index=slot.group==='work'?workIndex++:slot.group==='series'?seriesIndex++:0;
+      targetGrid(slot).appendChild(makeCard(slot,found,url,index));
     }
-    photoGrid.querySelectorAll('input[type=file]').forEach(input=>{
+    document.querySelectorAll('input[type=file]').forEach(input=>{
       input.addEventListener('change',()=>replaceSlot(input.dataset.slot,input.files[0]));
     });
-    photoGrid.querySelectorAll('[data-delete]').forEach(btn=>{
+    document.querySelectorAll('[data-delete]').forEach(btn=>{
       btn.addEventListener('click',()=>deleteSlot(btn.dataset.delete));
     });
   }catch(err){setStatus(err.message,true);}
 }
-
-async function getFound(slot){
+async function getFound(key){
+  const slot=IMAGE_SLOTS.find(s=>s.key===key);
   const [rootFiles,galleryFiles]=await Promise.all([listFiles(),listGalleryFiles()]);
-  return await findFile(IMAGE_SLOTS.find(s=>s.key===slot),rootFiles,galleryFiles);
+  return await findFile(slot,rootFiles,galleryFiles);
 }
-
 async function replaceSlot(key,file){
   if(!file) return;
   if(!file.type.startsWith('image/')){setStatus('Please choose an image file.',true);return;}
@@ -282,7 +325,6 @@ async function replaceSlot(key,file){
     await renderSlots();
   }catch(err){setStatus(err.message,true);}
 }
-
 async function deleteSlot(key){
   const slot=IMAGE_SLOTS.find(s=>s.key===key);
   if(!confirm(`Delete the ${slot.title} image?`)) return;
@@ -297,7 +339,6 @@ async function deleteSlot(key){
     await renderSlots();
   }catch(err){setStatus(err.message,true);}
 }
-
 if(supabaseClient){
   supabaseClient.auth.onAuthStateChange(()=>showAdminIfAuthorized());
   showAdminIfAuthorized();
@@ -307,4 +348,3 @@ if(supabaseClient){
 </script>
 </body>
 </html>
-
