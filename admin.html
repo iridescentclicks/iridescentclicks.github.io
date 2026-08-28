@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Iridescent admin — private photo management.">
+<title>Iridescent — Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
+:root{--bg:#090909;--surface:#111;--surface2:#171717;--text:#f2f0eb;--muted:#9c9a95;--line:rgba(255,255,255,.12);--danger:#d66}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Manrope,Arial,sans-serif;font-weight:300;line-height:1.5;min-height:100vh}
+body:before{content:"";position:fixed;inset:-30%;z-index:-1;pointer-events:none;background:radial-gradient(circle at 20% 20%,rgba(157,94,255,.08),transparent 28%),radial-gradient(circle at 80% 65%,rgba(45,215,197,.06),transparent 25%)}
+a{color:inherit;text-decoration:none}
+.container{width:min(calc(100% - 40px),1200px);margin:auto}
+.mono{font-family:"DM Mono",monospace;text-transform:uppercase;letter-spacing:.12em;font-size:10px}
+header{padding:24px 0;border-bottom:1px solid var(--line)}
+.nav{display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:"Playfair Display",serif;font-size:25px}
+.back{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.12em}
+main{padding:70px 0}
+h1{font-family:"Playfair Display",serif;font-size:clamp(50px,8vw,90px);font-weight:400;line-height:.95}
+.lead{color:var(--muted);margin-top:14px}
+.panel{background:var(--surface);border:1px solid var(--line);padding:28px;margin-top:42px}
+label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:9px}
+input[type=email],input[type=password]{width:100%;background:#0d0d0d;color:var(--text);border:1px solid var(--line);padding:13px 14px;outline:none}
+input:focus{border-color:#777}
+.field{margin-bottom:18px}
+button{border:1px solid #777;background:transparent;color:var(--text);padding:12px 16px;cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font:inherit;font-size:10px}
+button:hover{background:#f2f0eb;color:#090909}
+.primary{background:#f2f0eb;color:#090909;border-color:#f2f0eb}
+.danger{border-color:var(--danger);color:#f0aaaa}
+.hidden{display:none!important}
+.message{margin-top:16px;color:var(--muted);font-size:13px}
+.error{color:#efaaaa}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid var(--line);padding-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:24px}
+.card{background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.preview{aspect-ratio:4/3;background:#151515;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.preview img{width:100%;height:100%;object-fit:cover}
+.empty{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.card-body{padding:18px}
+.card-title{font-family:"Playfair Display",serif;font-size:25px}
+.card-name{color:var(--muted);font-size:11px;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+input[type=file]{display:none}
+.status{margin-top:20px;color:var(--muted);min-height:20px}
+.note{margin-top:20px;padding:16px;border:1px solid var(--line);color:var(--muted);font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.container{width:min(calc(100% - 28px),1200px)}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.toolbar{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <a class="logo" href="index.html">Iridescent</a>
+    <a class="back" href="index.html">← Public site</a>
+  </div>
+</header>
+
+<main>
+<div class="container">
+  <section id="loginView">
+    <span class="mono">Private area</span>
+    <h1>Admin.</h1>
+    <p class="lead">Sign in to manage the photographs shown on Iridescent.</p>
+    <div class="panel">
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="primary" type="submit">Sign in</button>
+        <p id="loginMessage" class="message" aria-live="polite"></p>
+      </form>
+    </div>
+    <div class="note">This page is separate from the public navigation. Security is enforced by Supabase Auth and Storage policies, not by hiding a button in the HTML.</div>
+  </section>
+
+  <section id="adminView" class="hidden">
+    <div class="toolbar">
+      <div>
+        <span class="mono">Iridescent / Control room</span>
+        <h1>Photographs.</h1>
+      </div>
+      <button id="logoutBtn">Sign out</button>
+    </div>
+    <p class="lead">Replace any of the six public gallery photographs. Your Supabase policies restrict these actions to your admin account.</p>
+    <div id="photoGrid" class="grid"></div>
+    <p id="adminStatus" class="status" aria-live="polite"></p>
+  </section>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+const loginView=document.getElementById('loginView');
+const adminView=document.getElementById('adminView');
+const loginForm=document.getElementById('loginForm');
+const loginMessage=document.getElementById('loginMessage');
+const adminStatus=document.getElementById('adminStatus');
+const photoGrid=document.getElementById('photoGrid');
+
+const FALLBACKS=[
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=800&q=80"
+];
+
+function setMessage(text,error=false){
+  loginMessage.textContent=text;
+  loginMessage.className='message'+(error?' error':'');
+}
+function setStatus(text,error=false){
+  adminStatus.textContent=text;
+  adminStatus.className='status'+(error?' error':'');
+}
+
+function requireConfig(){
+  if(!supabaseClient){
+    setMessage('Add your Supabase project URL and anon/publishable key to supabase-config.js first.',true);
+    return false;
+  }
+  return true;
+}
+
+async function currentAdmin(){
+  if(!supabaseClient) return false;
+  const {data:{user}}=await supabaseClient.auth.getUser();
+  return !!user && user.id===IRIDESCENT_ADMIN_UID;
+}
+
+async function showAdminIfAuthorized(){
+  if(!supabaseClient) return;
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  if(!session) return;
+  const ok=await currentAdmin();
+  if(ok){
+    loginView.classList.add('hidden');
+    adminView.classList.remove('hidden');
+    await renderSlots();
+  }else{
+    await supabaseClient.auth.signOut();
+    setMessage('This account is not authorized for the Iridescent admin area.',true);
+  }
+}
+
+loginForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!requireConfig()) return;
+  setMessage('Signing in…');
+  const {error}=await supabaseClient.auth.signInWithPassword({
+    email:document.getElementById('email').value.trim(),
+    password:document.getElementById('password').value
+  });
+  if(error){setMessage(error.message,true);return;}
+  const ok=await currentAdmin();
+  if(!ok){
+    await supabaseClient.auth.signOut();
+    setMessage('Login succeeded, but this account is not the Iridescent admin.',true);
+    return;
+  }
+  loginView.classList.add('hidden');
+  adminView.classList.remove('hidden');
+  setMessage('');
+  await renderSlots();
+});
+
+document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  await supabaseClient.auth.signOut();
+  adminView.classList.add('hidden');
+  loginView.classList.remove('hidden');
+});
+
+async function listGalleryFiles(){
+  const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).list('gallery',{
+    limit:100,
+    sortBy:{column:'name',order:'asc'}
+  });
+  if(error) throw error;
+  return (data||[]).filter(f=>/\.(jpe?g|png|webp|gif|avif)$/i.test(f.name));
+}
+
+async function findSlotFile(slot,files){
+  const prefix=String(slot).padStart(2,'0')+'.';
+  return files.find(f=>f.name.startsWith(prefix)) || null;
+}
+
+async function signedUrl(name){
+  if(!name) return null;
+  const {data,error}=await supabaseClient.storage.from(SUPABASE_BUCKET).createSignedUrl(`gallery/${name}`,3600);
+  if(error) return null;
+  return data.signedUrl;
+}
+
+async function renderSlots(){
+  if(!supabaseClient) return;
+  photoGrid.innerHTML='';
+  try{
+    const files=await listGalleryFiles();
+    for(let slot=1;slot<=6;slot++){
+      const file=await findSlotFile(slot,files);
+      const url=file?await signedUrl(file.name):FALLBACKS[slot-1];
+      const card=document.createElement('article');
+      card.className='card';
+      card.innerHTML=`
+        <div class="preview">${url?`<img src="${url}" alt="Gallery slot ${slot}">`:'<span class="empty">Empty</span>'}</div>
+        <div class="card-body">
+          <div class="mono">Slot ${String(slot).padStart(2,'0')}</div>
+          <div class="card-title">${file?'Current photo':'No uploaded photo'}</div>
+          <div class="card-name">${file?file.name:'Public site will use its fallback image'}</div>
+          <div class="actions">
+            <label class="primary" style="padding:12px 16px;cursor:pointer">
+              Replace
+              <input type="file" accept="image/*" data-slot="${slot}">
+            </label>
+            ${file?`<button class="danger" data-delete="${slot}">Delete</button>`:''}
+          </div>
+        </div>`;
+      photoGrid.appendChild(card);
+    }
+    photoGrid.querySelectorAll('input[type=file]').forEach(input=>{
+      input.addEventListener('change',()=>replaceSlot(Number(input.dataset.slot),input.files[0]));
+    });
+    photoGrid.querySelectorAll('[data-delete]').forEach(btn=>{
+      btn.addEventListener('click',()=>deleteSlot(Number(btn.dataset.delete)));
+    });
+  }catch(err){
+    setStatus(err.message,true);
+  }
+}
+
+async function replaceSlot(slot,file){
+  if(!file) return;
+  if(!file.type.startsWith('image/')){setStatus('Please choose an image file.',true);return;}
+  if(file.size>10*1024*1024){setStatus('That image is larger than the 10 MB bucket limit.',true);return;}
+  setStatus(`Replacing slot ${String(slot).padStart(2,'0')}…`);
+  try{
+    const files=await listGalleryFiles();
+    const old=await findSlotFile(slot,files);
+    if(old){
+      const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).remove([`gallery/${old.name}`]);
+      if(error) throw error;
+    }
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    const path=`gallery/${String(slot).padStart(2,'0')}.${ext}`;
+    const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).upload(path,file,{
+      cacheControl:'3600',upsert:false,contentType:file.type
+    });
+    if(error) throw error;
+    setStatus(`Slot ${String(slot).padStart(2,'0')} replaced successfully.`);
+    await renderSlots();
+  }catch(err){
+    setStatus(err.message,true);
+  }
+}
+
+async function deleteSlot(slot){
+  if(!confirm(`Delete the photo in slot ${String(slot).padStart(2,'0')}?`)) return;
+  setStatus(`Deleting slot ${String(slot).padStart(2,'0')}…`);
+  try{
+    const files=await listGalleryFiles();
+    const old=await findSlotFile(slot,files);
+    if(!old){setStatus('Nothing to delete.');return;}
+    const {error}=await supabaseClient.storage.from(SUPABASE_BUCKET).remove([`gallery/${old.name}`]);
+    if(error) throw error;
+    setStatus(`Slot ${String(slot).padStart(2,'0')} deleted.`);
+    await renderSlots();
+  }catch(err){
+    setStatus(err.message,true);
+  }
+}
+
+if(supabaseClient){
+  supabaseClient.auth.onAuthStateChange(()=>showAdminIfAuthorized());
+  showAdminIfAuthorized();
+}else{
+  setMessage('Add your Supabase project URL and anon/publishable key to supabase-config.js first.',true);
+}
+</script>
+</body>
+</html>
