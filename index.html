@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Iridescent — a cinematic photography portfolio.">
+<title>Iridescent — Photography</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
+
+:root{
+  --bg:#090909; --surface:#111; --text:#f2f0eb; --muted:#9c9a95;
+  --line:rgba(255,255,255,.12); --max:1400px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:Manrope,Arial,sans-serif;font-weight:300;line-height:1.5}
+body:before{
+  content:"";position:fixed;inset:-30%;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle at 20% 20%,rgba(157,94,255,.08),transparent 28%),
+             radial-gradient(circle at 80% 65%,rgba(45,215,197,.06),transparent 25%);
+}
+a{color:inherit;text-decoration:none}
+img{display:block;width:100%;height:100%;object-fit:cover}
+button{font:inherit;color:inherit}
+.container{width:min(calc(100% - 48px),var(--max));margin:auto}
+.mono{font-family:"DM Mono",monospace;text-transform:uppercase;letter-spacing:.12em;font-size:10px}
+header{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  padding:22px 24px;transition:.35s ease;
+}
+header.scrolled{background:rgba(9,9,9,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.nav{width:min(100%,var(--max));margin:auto;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:"Playfair Display",serif;font-size:22px;letter-spacing:.01em}
+nav{display:flex;gap:30px}
+nav a{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:#d2d0cb;transition:.25s}
+nav a:hover{color:#fff}
+.menu{display:none;background:none;border:0;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.hero{min-height:100svh;position:relative;display:flex;align-items:flex-end;overflow:hidden}
+.hero-media{position:absolute;inset:0}
+.hero-media:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.18) 40%,rgba(0,0,0,.82))}
+.hero img{filter:saturate(.8) contrast(1.05)}
+.hero-copy{position:relative;z-index:2;padding:0 0 70px;width:100%}
+.kicker{margin-bottom:22px;color:#c5c2ba}
+.hero h1{font-family:"Playfair Display",serif;font-weight:400;font-size:clamp(70px,14vw,190px);line-height:.82;letter-spacing:-.055em}
+.hero h1 em{font-weight:400}
+.hero-bottom{margin-top:38px;display:flex;align-items:end;justify-content:space-between;gap:20px}
+.hero-bottom p{max-width:420px;color:#d0cec8;font-size:14px}
+.scroll{display:flex;gap:10px;align-items:center;color:#aaa}
+.scroll i{width:42px;height:1px;background:#aaa}
+section{padding:130px 0}
+.section-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:46px}
+.section-head h2{font-family:"Playfair Display",serif;font-size:42px;font-weight:400}
+.section-head span{color:var(--muted)}
+.gallery{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.photo{position:relative;overflow:hidden;background:#151515}
+.photo:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.6));opacity:0;transition:.4s}
+.photo:hover:after{opacity:1}
+.photo img{transition:transform .8s cubic-bezier(.2,.7,.2,1),filter .5s}
+.photo:hover img{transform:scale(1.045);filter:saturate(1.08)}
+.photo .caption{position:absolute;z-index:2;left:20px;bottom:17px;opacity:0;transform:translateY(8px);transition:.35s;font-size:11px}
+.photo:hover .caption{opacity:1;transform:none}
+.p1{grid-column:span 7;height:650px}.p2{grid-column:span 5;height:650px}.p3{grid-column:span 4;height:540px}.p4{grid-column:span 8;height:540px}
+.p5{grid-column:span 8;height:620px}.p6{grid-column:span 4;height:620px}
+.series{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.series-card{min-height:500px;position:relative;overflow:hidden}
+.series-card img{transition:.8s}
+.series-card:hover img{transform:scale(1.05)}
+.series-card:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.8))}
+.series-info{position:absolute;z-index:2;left:25px;right:25px;bottom:25px;display:flex;justify-content:space-between;align-items:end}
+.series-info h3{font-family:"Playfair Display",serif;font-size:32px;font-weight:400}
+.about{display:grid;grid-template-columns:1fr 1.5fr;gap:80px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.about h2{font-family:"Playfair Display",serif;font-size:clamp(48px,7vw,90px);font-weight:400;line-height:.95}
+.about-copy{max-width:650px;font-size:21px;line-height:1.55;color:#d4d1ca}
+.about-copy p+p{margin-top:28px;color:var(--muted);font-size:15px;line-height:1.8}
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:end}
+.contact h2{font-family:"Playfair Display",serif;font-size:clamp(55px,9vw,120px);font-weight:400;line-height:.9}
+.contact-right{justify-self:end;width:min(100%,430px)}
+.contact-right p{color:var(--muted);margin-bottom:28px}
+.email{font-family:"Playfair Display",serif;font-size:28px;border-bottom:1px solid #777;padding-bottom:8px;display:inline-block}
+footer{padding:28px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;color:var(--muted)}
+.lightbox{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:30px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:min(1200px,94vw);max-height:88vh;width:auto;height:auto;object-fit:contain}
+.close{position:absolute;right:28px;top:22px;border:0;background:none;font-size:30px;cursor:pointer}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s,transform .8s}
+.reveal.visible{opacity:1;transform:none}
+@media(max-width:800px){
+  .container{width:min(calc(100% - 32px),var(--max))}
+  header{padding:18px 16px} nav{display:none}.menu{display:block}
+  nav.mobile{display:flex;position:absolute;top:64px;left:16px;right:16px;background:#111;padding:20px;flex-direction:column;gap:18px;border:1px solid var(--line)}
+  .hero-copy{padding-bottom:42px}.hero-bottom{align-items:start;flex-direction:column}.scroll{display:none}
+  section{padding:90px 0}.section-head{margin-bottom:28px}.section-head h2{font-size:34px}
+  .gallery{display:grid;grid-template-columns:1fr 1fr}.photo{height:330px!important;grid-column:span 1!important}.p1,.p4,.p5{grid-column:span 2!important}
+  .series{grid-template-columns:1fr}.series-card{min-height:440px}
+  .about,.contact{grid-template-columns:1fr;gap:40px}.about-copy{font-size:18px}.contact-right{justify-self:start}
+  footer{gap:15px;flex-direction:column}
+}
+
+.dynamic-status{margin-top:14px;color:var(--muted);font-size:11px;letter-spacing:.06em}
+.photo.loading{min-height:300px}
+.photo img{cursor:zoom-in}
+@media(max-width:800px){.dynamic-status{font-size:10px}}
+</style>
+</head>
+<body>
+<header id="header">
+  <div class="nav">
+    <a class="logo" href="#top">Iridescent</a>
+    <nav id="nav">
+      <a href="#work">Work</a><a href="#series">Series</a><a href="#about">About</a><a href="#contact">Contact</a>
+    </nav>
+    <button class="menu" id="menu">Menu</button>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="hero-media">
+    <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=2200&q=90" alt="Editorial portrait in soft light">
+  </div>
+  <div class="container hero-copy">
+    <div class="kicker mono">Nature Photography / Visual Stories</div>
+    <h1>Iridescent</h1>
+    <div class="hero-bottom">
+      <p>Wild landscapes, quiet forests, mountain light and fleeting moments in nature.</p>
+      <div class="scroll mono"><i></i> Scroll to explore</div>
+    </div>
+  </div>
+</section>
+
+<section id="work">
+<div class="container">
+  <div class="section-head reveal"><h2>Into the wild</h2><span class="mono">01 — 06</span></div>
+  <div class="gallery"><article class="photo p1 reveal" data-slot="1"><img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=85" alt="Mountain landscape"><span class="caption mono">01 / Horizon</span></article>
+     <article class="photo p2 reveal" data-slot="2"><img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85" alt="Mountain valley"><span class="caption mono">02 / Solitude</span></article>
+     <article class="photo p3 reveal" data-slot="3"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1000&q=85" alt="Snowy mountain"><span class="caption mono">03 / Alpine</span></article>
+     <article class="photo p4 reveal" data-slot="4"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1700&q=85" alt="Forest road"><span class="caption mono">04 / Open Road</span></article>
+     <article class="photo p5 reveal" data-slot="5"><img src="https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=1600&q=85" alt="Mountain lake"><span class="caption mono">05 / Afterglow</span></article>
+     <article class="photo p6 reveal" data-slot="6"><img src="https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=1100&q=85" alt="Forest landscape"><span class="caption mono">06 / Stillness</span></article></div>
+   <p class="dynamic-status mono" id="galleryStatus" aria-live="polite"></p>
+ </div>
+ </section>
+
+<section id="series">
+<div class="container">
+  <div class="section-head reveal"><h2>Nature series</h2><span class="mono">Collections</span></div>
+  <div class="series">
+    <article class="series-card reveal"><img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1100&q=85" alt="Mountain series"><div class="series-info"><h3>Terrain</h3><span class="mono">08 images</span></div></article>
+    <article class="series-card reveal"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1100&q=85" alt="Portrait series"><div class="series-info"><h3>Human</h3><span class="mono">12 images</span></div></article>
+    <article class="series-card reveal"><img src="https://images.unsplash.com/photo-1428908728789-d2de25dbd4e2?auto=format&fit=crop&w=1100&q=85" alt="Nature series"><div class="series-info"><h3>Elsewhere</h3><span class="mono">16 images</span></div></article>
+  </div>
+</div>
+</section>
+
+<section id="about">
+<div class="container about">
+  <div class="reveal"><span class="mono">Behind the lens</span><h2>Chasing<br>the light.</h2></div>
+  <div class="about-copy reveal">
+    <p>Iridescent is an independent nature photography practice focused on wilderness, atmosphere and the changing language of light. I work slowly, looking for the fleeting details that make an image feel remembered rather than simply seen.</p>
+    <p>Available for editorial, travel, conservation and selected commissioned projects. Based between cities, always following the next interesting frame.</p>
+  </div>
+</div>
+</section>
+
+<section id="contact">
+<div class="container contact">
+  
+  <div class="contact-left reveal">
+    
+    <a class="email" href="mailto:verdigris10@gmail.com">hello@iridescent.photo</a>
+  </div>
+</div>
+</section>
+</main>
+
+<footer>
+  <div class="container" style="display:flex;justify-content:space-between;width:100%;gap:20px">
+    <span class="mono">© 2026 Iridescent</span>
+    <span class="mono">Nature Photography</span>
+    <span class="mono"><a href="#">Instagram</a> </span>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox"><button class="close" id="close" aria-label="Close">×</button><img id="lightboxImg" alt=""></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+const header=document.getElementById('header');
+window.addEventListener('scroll',()=>header.classList.toggle('scrolled',scrollY>30));
+
+const menu=document.getElementById('menu'), nav=document.getElementById('nav');
+menu.addEventListener('click',()=>nav.classList.toggle('mobile'));
+nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('mobile')));
+
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+const box=document.getElementById('lightbox'), boxImg=document.getElementById('lightboxImg');
+function bindLightbox(){
+  document.querySelectorAll('.photo img').forEach(img=>{
+    if(img.dataset.lightboxBound) return;
+    img.dataset.lightboxBound='1';
+    img.addEventListener('click',()=>{
+      boxImg.src=img.src; boxImg.alt=img.alt; box.classList.add('open');
+    });
+  });
+}
+bindLightbox();
+
+document.getElementById('close').onclick=()=>box.classList.remove('open');
+box.addEventListener('click',e=>{if(e.target===box)box.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')box.classList.remove('open')});
+
+const fallbackImages = [
+  {src:"https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=85",alt:"Mountain landscape",caption:"01 / Horizon"},
+  {src:"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=85",alt:"Mountain valley",caption:"02 / Solitude"},
+  {src:"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1000&q=85",alt:"Snowy mountain",caption:"03 / Alpine"},
+  {src:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1700&q=85",alt:"Forest road",caption:"04 / Open Road"},
+  {src:"https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=1600&q=85",alt:"Mountain lake",caption:"05 / Afterglow"},
+  {src:"https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=1100&q=85",alt:"Forest landscape",caption:"06 / Stillness"}
+];
+
+function setGalleryImage(index, src, alt, caption){
+  const card=document.querySelector(`.photo[data-slot="${index+1}"]`);
+  if(!card) return;
+  const img=card.querySelector('img');
+  const cap=card.querySelector('.caption');
+  img.src=src; img.alt=alt;
+  cap.textContent=caption;
+  card.classList.add('visible');
+}
+
+async function loadSupabaseGallery(){
+  const status=document.getElementById('galleryStatus');
+  if(!supabaseClient){
+    status.textContent='';
+    bindLightbox();
+    return;
+  }
+
+  try{
+    const {data:files,error}=await supabaseClient.storage
+      .from(SUPABASE_BUCKET)
+      .list('gallery',{limit:100,sortBy:{column:'name',order:'asc'}});
+
+    if(error) throw error;
+
+    const images=(files||[])
+      .filter(f=>/\.(jpe?g|png|webp|gif|avif)$/i.test(f.name))
+      .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}))
+      .slice(0,6);
+
+    if(!images.length){
+      status.textContent='';
+      return;
+    }
+
+    const results=await Promise.all(images.map(async (file)=>{
+      const path=`gallery/${file.name}`;
+      const {data,error}=await supabaseClient.storage
+        .from(SUPABASE_BUCKET)
+        .createSignedUrl(path,3600);
+      if(error) return null;
+      return {url:data.signedUrl,name:file.name};
+    }));
+
+    results.filter(Boolean).forEach((item,index)=>{
+      setGalleryImage(index,item.url,item.name.replace(/\.[^.]+$/,''),`${String(index+1).padStart(2,'0')} / Iridescent`);
+    });
+
+    status.textContent='';
+    bindLightbox();
+  }catch(err){
+    console.warn('Iridescent gallery could not load from Supabase:',err);
+    status.textContent='';
+  }
+}
+
+loadSupabaseGallery();
+</script>
+</body>
+</html>
